@@ -1,5 +1,5 @@
-The length: 32
-The width: 32
+The length: 16
+The width: 24
 
 
 
