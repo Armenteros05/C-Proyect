@@ -36,20 +36,38 @@ void initMap(Map *map) {
 
 // Function to print the map compactly
 void printMap(Map *map) {
+    // Top border
+    printf(" ");
+    for (int j = 0; j < map->width * 2; j++) {
+        printf("-");
+    }
+    printf("\n");
+
+    // Rows
     for (int i = 0; i < map->height; i++) {
+        printf("|"); // Left border
         for (int j = 0; j < map->width; j++) {
             if (map->grid[i][j] == 'P') {
-                printf("[]");   // parking spot (compact)
+                printf("[]");   // parking spot
             } else if (map->grid[i][j] == 'E') {
                 printf("EXIT");
+                j += 1; // skip extra cell (EXIT uses 4 chars)
             } else if (map->grid[i][j] == 'S') {
                 printf("ENTR");
+                j += 1; // skip extra cell (ENTR uses 4 chars)
             } else {
-                printf("  ");   // road (2 spaces, keeps grid neat)
+                printf("  ");   // empty road
             }
         }
-        printf("\n");  // new row (no extra blank line)
+        printf("|\n"); // Right border
     }
+
+    // Bottom border
+    printf(" ");
+    for (int j = 0; j < map->width * 2; j++) {
+        printf("-");
+    }
+    printf("\n");
 }
 
 // Free memory
