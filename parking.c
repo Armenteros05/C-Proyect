@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// ======================= Structures =======================
+
 // Structure to represent a vehicle
 typedef struct Vehicle {
     char plate[10];
@@ -15,40 +17,58 @@ typedef struct ParkingSpot {
     int isOccupied;
 } ParkingSpot;
 
-// Global variables
+// ======================= Globals =======================
 ParkingSpot *parkingSpots = NULL;
 int totalSpots = 0;
 Vehicle *vehicleList = NULL;
 
-// Function to load the initial parking map from a file
-void loadParkingMap(const char *filename) {
-    FILE *file = fopen(filename, "r");
+// For ASCII map
+#define MAX_ROWS 100
+#define MAX_COLS 200
+char mapData[MAX_ROWS][MAX_COLS];
+int mapRows = 0;
+
+// ======================= Functions =======================
+
+// Load parking map from a file
+void loadParkingMap(const char *maptxt) {
+    FILE *file = fopen(maptxt, "r");
     if (!file) {
-        perror("Error opening file");
+        perror("Error opening map file");
         exit(EXIT_FAILURE);
     }
 
-    fscanf(file, "%d", &totalSpots);
+    // First line contains the number of parking spots
+    fscanf(file, "%d\n", &totalSpots);
     parkingSpots = (ParkingSpot *)malloc(totalSpots * sizeof(ParkingSpot));
     for (int i = 0; i < totalSpots; i++) {
         parkingSpots[i].id = i + 1;
         parkingSpots[i].isOccupied = 0;
     }
 
+    // Read the rest of the file into mapData
+    while (fgets(mapData[mapRows], MAX_COLS, file)) {
+        size_t len = strlen(mapData[mapRows]);
+        if (len > 0 && mapData[mapRows][len - 1] == '\n') {
+            mapData[mapRows][len - 1] = '\0'; // remove newline
+        }
+        mapRows++;
+    }
+
     fclose(file);
 }
 
-// Function to display the menu
+// Display the main menu
 void displayMenu() {
     printf("\nParking Management System\n");
     printf("1. Vehicle entry\n");
     printf("2. Vehicle exit\n");
-    printf("3. Show parking status\n");
+    printf("3. Show parking status (map)\n");
     printf("4. Exit\n");
     printf("Enter your choice: ");
 }
 
-// Function to handle vehicle entry
+// Handle vehicle entry
 void vehicleEntry() {
     char plate[10];
     printf("Enter vehicle license plate: ");
@@ -74,7 +94,7 @@ void vehicleEntry() {
     printf("No available spots.\n");
 }
 
-// Function to handle vehicle exit
+// Handle vehicle exit
 void vehicleExit() {
     int ticket;
     printf("Enter ticket number: ");
@@ -86,7 +106,7 @@ void vehicleExit() {
             // Free the spot
             parkingSpots[ticket - 1].isOccupied = 0;
 
-            // Remove the vehicle from the list
+            // Remove vehicle from list
             if (prev) {
                 prev->next = current->next;
             } else {
@@ -104,17 +124,35 @@ void vehicleExit() {
     printf("Invalid ticket.\n");
 }
 
-// Function to display parking status
+// Display the parking map with occupancy
 void displayParkingStatus() {
-    printf("\nParking status:\n");
-    for (int i = 0; i < totalSpots; i++) {
-        printf("Spot %d: %s\n", parkingSpots[i].id, parkingSpots[i].isOccupied ? "Occupied" : "Free");
+    system("clear"); // use "cls" on Windows
+
+    printf("\nParking Lot Map:\n\n");
+
+    int spotCounter = 0;
+
+    for (int r = 0; r < mapRows; r++) {
+        for (int c = 0; mapData[r][c] != '\0'; c++) {
+            if (mapData[r][c] == '[' && mapData[r][c+1] == ' ' && mapData[r][c+2] == ']') {
+                if (spotCounter < totalSpots && parkingSpots[spotCounter].isOccupied) {
+                    printf("[X]"); // Occupied
+                } else {
+                    printf("[ ]"); // Free
+                }
+                c += 2; // Skip next chars
+                spotCounter++;
+            } else {
+                putchar(mapData[r][c]);
+            }
+        }
+        putchar('\n');
     }
 }
 
-// Main function
+// ======================= Main =======================
 int main() {
-    loadParkingMap("parking_map.txt");
+    loadParkingMap("map.txt");
 
     int choice;
     while (1) {
