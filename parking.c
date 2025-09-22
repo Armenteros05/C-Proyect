@@ -2,29 +2,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Estructura para representar un vehículo
+// Structure to represent a vehicle
 typedef struct Vehicle {
     char plate[10];
     int ticketNumber;
     struct Vehicle *next;
 } Vehicle;
 
-// Estructura para representar una plaza de aparcamiento
+// Structure to represent a parking spot
 typedef struct ParkingSpot {
     int id;
     int isOccupied;
 } ParkingSpot;
 
-// Variables globales
+// Global variables
 ParkingSpot *parkingSpots = NULL;
 int totalSpots = 0;
 Vehicle *vehicleList = NULL;
 
-// Función para cargar el mapa inicial desde un archivo
+// Function to load the initial parking map from a file
 void loadParkingMap(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        perror("Error al abrir el archivo");
+        perror("Error opening file");
         exit(EXIT_FAILURE);
     }
 
@@ -38,55 +38,55 @@ void loadParkingMap(const char *filename) {
     fclose(file);
 }
 
-// Función para mostrar el menú
+// Function to display the menu
 void displayMenu() {
     printf("\nParking Management System\n");
-    printf("1. Entrada de vehículo\n");
-    printf("2. Salida de vehículo\n");
-    printf("3. Mostrar estado del aparcamiento\n");
-    printf("4. Salir\n");
-    printf("Ingrese su opción: ");
+    printf("1. Vehicle entry\n");
+    printf("2. Vehicle exit\n");
+    printf("3. Show parking status\n");
+    printf("4. Exit\n");
+    printf("Enter your choice: ");
 }
 
-// Función para gestionar la entrada de vehículos
+// Function to handle vehicle entry
 void vehicleEntry() {
     char plate[10];
-    printf("Ingrese la matrícula del vehículo: ");
-    scanf("%s", plate);
+    printf("Enter vehicle license plate: ");
+    scanf("%9s", plate);
 
-    // Buscar una plaza libre
+    // Look for a free spot
     for (int i = 0; i < totalSpots; i++) {
         if (!parkingSpots[i].isOccupied) {
             parkingSpots[i].isOccupied = 1;
 
-            // Crear un nuevo vehículo
+            // Create a new vehicle
             Vehicle *newVehicle = (Vehicle *)malloc(sizeof(Vehicle));
             strcpy(newVehicle->plate, plate);
             newVehicle->ticketNumber = parkingSpots[i].id;
             newVehicle->next = vehicleList;
             vehicleList = newVehicle;
 
-            printf("Vehículo estacionado en la plaza %d. Ticket: %d\n", parkingSpots[i].id, parkingSpots[i].id);
+            printf("Vehicle parked in spot %d. Ticket: %d\n", parkingSpots[i].id, parkingSpots[i].id);
             return;
         }
     }
 
-    printf("No hay plazas disponibles.\n");
+    printf("No available spots.\n");
 }
 
-// Función para gestionar la salida de vehículos
+// Function to handle vehicle exit
 void vehicleExit() {
     int ticket;
-    printf("Ingrese el número de ticket: ");
+    printf("Enter ticket number: ");
     scanf("%d", &ticket);
 
     Vehicle *prev = NULL, *current = vehicleList;
     while (current) {
         if (current->ticketNumber == ticket) {
-            // Liberar la plaza
+            // Free the spot
             parkingSpots[ticket - 1].isOccupied = 0;
 
-            // Eliminar el vehículo de la lista
+            // Remove the vehicle from the list
             if (prev) {
                 prev->next = current->next;
             } else {
@@ -94,25 +94,25 @@ void vehicleExit() {
             }
             free(current);
 
-            printf("Vehículo con ticket %d ha salido.\n", ticket);
+            printf("Vehicle with ticket %d has exited.\n", ticket);
             return;
         }
         prev = current;
         current = current->next;
     }
 
-    printf("Ticket no válido.\n");
+    printf("Invalid ticket.\n");
 }
 
-// Función para mostrar el estado del aparcamiento
+// Function to display parking status
 void displayParkingStatus() {
-    printf("\nEstado del aparcamiento:\n");
+    printf("\nParking status:\n");
     for (int i = 0; i < totalSpots; i++) {
-        printf("Plaza %d: %s\n", parkingSpots[i].id, parkingSpots[i].isOccupied ? "Ocupada" : "Libre");
+        printf("Spot %d: %s\n", parkingSpots[i].id, parkingSpots[i].isOccupied ? "Occupied" : "Free");
     }
 }
 
-// Función principal
+// Main function
 int main() {
     loadParkingMap("parking_map.txt");
 
@@ -132,7 +132,7 @@ int main() {
                 displayParkingStatus();
                 break;
             case 4:
-                printf("Saliendo del programa.\n");
+                printf("Exiting program.\n");
                 free(parkingSpots);
                 while (vehicleList) {
                     Vehicle *temp = vehicleList;
@@ -141,7 +141,7 @@ int main() {
                 }
                 return 0;
             default:
-                printf("Opción no válida. Intente de nuevo.\n");
+                printf("Invalid option. Try again.\n");
         }
     }
 }
