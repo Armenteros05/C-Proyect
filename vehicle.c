@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "vehicle.h"
 
 // General constructor
@@ -15,12 +14,12 @@ Vehicle createVehicle(int id, int x, int y, int width, int height, char symbol) 
 
 // Small car 1x1
 Vehicle createCarSmall(int id, int x, int y) {
-    return createVehicle(id, x, y, 1, 1, 'S'); // 'S' for small car
+    return createVehicle(id, x, y, 1, 1, 'S');
 }
 
 // Large car 2x2
 Vehicle createCarLarge(int id, int x, int y) {
-    return createVehicle(id, x, y, 2, 2, 'L'); // 'L' for large car
+    return createVehicle(id, x, y, 2, 2, 'L');
 }
 
 // Move vehicle
@@ -28,7 +27,6 @@ void moveVehicle(Vehicle *v, int dx, int dy) {
     v->x += dx;
     v->y += dy;
 
-    // Optional: boundary checks
     if (v->x < 0) v->x = 0;
     if (v->y < 0) v->y = 0;
     if (v->x + v->width > MAP_COLS) v->x = MAP_COLS - v->width;
