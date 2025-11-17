@@ -1,21 +1,17 @@
 #ifndef VEHICLE_H
 #define VEHICLE_H
 
-typedef enum {
-    SMALL,
-    LARGE
-} VehicleType;
+#include "map.h"
 
 typedef struct {
     int x;
     int y;
-    VehicleType type;
     char symbol;
 } Vehicle;
 
-Vehicle createCarSmall(int x, int y);
-Vehicle createCarLarge(int x, int y);
-
+Vehicle createCar(int x, int y, char symbol);
 void drawVehicle(Vehicle v);
+void clearVehicle(Vehicle v);
+void moveVehicle(Vehicle *v, int newX, int newY);
 
 #endif

@@ -1,16 +1,28 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include "map.h"
 #include "vehicle.h"
 
 int main() {
     resetMap();
 
-    Vehicle v1 = createCarSmall(10, 5);
-    Vehicle v2 = createCarLarge(20, 10);
+    Vehicle car = createCar(5, 5, 'C');
+    drawVehicle(car);
 
-    drawVehicle(v1);
-    drawVehicle(v2);
+    while (1) {
+        system("cls"); // Windows console refresh
+        printMap();
 
-    printMap();
+        int newX = car.x + 1;
+        int newY = car.y;
+
+        if (newX >= MAP_COLS - 1) newX = 1; // wrap around
+
+        moveVehicle(&car, newX, newY);
+
+        usleep(100000); // 0.1 sec
+    }
 
     return 0;
 }
