@@ -1,7 +1,8 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "vehicle.h"
+#define MAP_ROWS 22
+#define MAP_COLS 85
 
 extern char parkingMap[MAP_ROWS][MAP_COLS + 1];
 

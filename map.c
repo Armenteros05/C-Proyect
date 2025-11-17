@@ -2,9 +2,6 @@
 #include <string.h>
 #include "map.h"
 
-char parkingMap[MAP_ROWS][MAP_COLS + 1];
-
-// ASCII map from your original
 const char *asciiMap[MAP_ROWS] = {
         "+---------------------------------------------------------------------------------+",
         "| ENTER                                                                           |",
@@ -29,6 +26,8 @@ const char *asciiMap[MAP_ROWS] = {
         "|                                                                            HERE |",
         "|---------------------------------------------------------------------------------|"
 };
+
+char parkingMap[MAP_ROWS][MAP_COLS + 1];
 
 void resetMap() {
     for (int i = 0; i < MAP_ROWS; i++) {
