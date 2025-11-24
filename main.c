@@ -4,6 +4,9 @@
 #include "map.h"
 #include "vehicle.h"
 
+// gcc  main.c map.c vehicle.c -o main.exe
+// .\main.exe
+
 int main() {
     resetMap();
 
@@ -23,6 +26,5 @@ int main() {
 
         usleep(100000); // 0.1 sec
     }
-
     return 0;
 }
