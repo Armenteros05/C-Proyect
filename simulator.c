@@ -5,7 +5,6 @@
 #include "map.h"
 #include "vehicle.h"
 
-// Vehicle state definitions
 typedef enum {
     STATE_PARKED,
     STATE_MOVING_TO_SPOT,
@@ -17,39 +16,17 @@ typedef struct {
     VehicleState state;
 } SimVehicle;
 
-#define MAX_CARS 20
+#define MAX_CARS NUM_SPOTS // Ahora 15
 #define ENTRY_X 10
-#define ENTRY_Y 1
+#define ENTRY_Y 2  // Pasillo de entrada
 
 SimVehicle allCars[MAX_CARS];
 int activeCars = 0;
 
 void printSimulation() {
-    printf("\033[H\033[J"); // Clears the console
-    printf("--- PARKING SIMULATOR ---\n");
+    printf("\033[H\033[J");
+    printf("--- PARKING SIMULATOR (%d Plazas Isla) ---\n", NUM_SPOTS);
     printMap();
-    printf("\n--- Status ---\n");
-    for (int i = 0; i < activeCars; i++) {
-        printf("Car %c (Index %d): ", allCars[i].car.symbol, i + 1);
-
-        switch (allCars[i].state) {
-            case STATE_PARKED:
-                printf("PARKED at spot %d (X:%d, Y:%d)\n",
-                       allCars[i].car.parkedSpotIndex,
-                       allCars[i].car.x,
-                       allCars[i].car.y);
-                break;
-            case STATE_MOVING_TO_SPOT:
-                printf("MOVING to spot %d (Target X:%d, Y:%d)\n",
-                       allCars[i].car.parkedSpotIndex,
-                       spots[allCars[i].car.parkedSpotIndex].x,
-                       spots[allCars[i].car.parkedSpotIndex].y);
-                break;
-            case STATE_WAITING_FOR_SPOT:
-                printf("WAITING (No spot available)\n");
-                break;
-        }
-    }
     printf("--------------------------\n");
 }
 
@@ -62,17 +39,14 @@ void stepSimulation() {
             int targetX = spots[spotIndex].x;
             int targetY = spots[spotIndex].y;
 
-            // Move the vehicle one step
             int moved = moveVehicle(&simCar->car, targetX, targetY);
 
             if (moved == 0) {
-                // The car has arrived precisely at the spot coordinates.
-                occupySpot(spotIndex); // Mark the spot as occupied
+                occupySpot(spotIndex);
                 simCar->state = STATE_PARKED;
             }
         }
 
-        // Redraw parked cars to ensure they remain visible
         if (simCar->state == STATE_PARKED) {
             drawVehicle(simCar->car);
         }
@@ -81,12 +55,14 @@ void stepSimulation() {
 
 void addNewCar() {
     if (activeCars >= MAX_CARS) {
-        printf("Maximum number of cars (%d) reached. Cannot add more.\n", MAX_CARS);
+        printf("Parking Completo!\n");
         return;
     }
 
     int freeSpotIndex = findFreeSpot();
-    char symbol = 'A' + activeCars;
+
+    // Coche [=]
+    char symbol = '=';
 
     allCars[activeCars].car = createCar(ENTRY_X, ENTRY_Y, symbol);
 
@@ -94,12 +70,11 @@ void addNewCar() {
         allCars[activeCars].car.parkedSpotIndex = freeSpotIndex;
         allCars[activeCars].state = STATE_MOVING_TO_SPOT;
         drawVehicle(allCars[activeCars].car);
-        printf("Car %c has entered the lot, heading to spot %d.\n", symbol, freeSpotIndex);
     } else {
         allCars[activeCars].car.parkedSpotIndex = -1;
         allCars[activeCars].state = STATE_WAITING_FOR_SPOT;
         drawVehicle(allCars[activeCars].car);
-        printf("Car %c has entered the lot but no free spot was found. Waiting...\n", symbol);
+        printf("Coche en espera...\n");
     }
 
     activeCars++;
@@ -126,22 +101,17 @@ int main() {
                 }
             }
             if (movingCarCount > 0) {
-                usleep(100000); // 0.1 second pause for visualization
+                usleep(80000);
             }
         } while (movingCarCount > 0);
 
-        printf("\n--- ACTION ---\n");
-        printf("Do you want to introduce a new car? (Y/N): ");
+        printf("\n--- ACCION ---\n");
+        printf("Nuevo coche? (Y/N): ");
 
-        if (scanf(" %c", &choice) != 1) {
-            choice = 'N';
-        }
-
-        if (toupper(choice) == 'Y') {
-            addNewCar();
-        }
+        if (scanf(" %c", &choice) != 1) choice = 'N';
+        if (toupper(choice) == 'Y') addNewCar();
     }
 
-    printf("\nSimulation finished. Goodbye!\n");
+    printf("\nFin de simulacion.\n");
     return 0;
 }
