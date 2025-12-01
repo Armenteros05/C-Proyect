@@ -6,14 +6,12 @@
 typedef struct {
     int x;
     int y;
-    char symbol;
-    int parkedSpotIndex; // Índice de la plaza a la que se dirige o está aparcado (-1 si no tiene destino)
+    char symbol; // Para lógica interna
+    int parkedSpotIndex; // -1 si no tiene plaza o no ha llegado
 } Vehicle;
 
 Vehicle createCar(int x, int y, char symbol);
-void drawVehicle(Vehicle v);
-void clearVehicle(Vehicle v);
-// moveVehicle ahora retorna 1 si el coche se movió, 0 si ya llegó a su destino (la plaza)
+// Nota: Las funciones drawVehicle/clearVehicle se simplifican porque SDL dibuja todo de nuevo cada frame
 int moveVehicle(Vehicle *v, int targetX, int targetY);
 
 #endif

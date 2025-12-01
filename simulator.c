@@ -5,7 +5,6 @@
 #include "map.h"
 #include "vehicle.h"
 
-// Adaptación PDF: structs para velocidad y estado
 typedef struct {
     Vehicle car;
     int speed;
@@ -13,17 +12,35 @@ typedef struct {
 } SimVehicle;
 
 #define MAX_CARS NUM_SPOTS
-#define ENTRY_X 10 // Inicio en el pasillo superior
+#define ENTRY_X 10
 #define ENTRY_Y 1
 
 SimVehicle allCars[MAX_CARS];
 int activeCars = 0;
+int gameMode = 1; // 1: Smooth, 2: Busy
+
+// --- PANTALLA DE INICIO / MENÚ ---
+void showMainMenu() {
+    system("clear"); // O "cls" en Windows
+    printf("\n");
+    printf(FG_CYAN "  ____            _     ____  _           \n");
+    printf(" |  _ \\ __ _ _ __| | __/ ___|(_)_ __ ___  \n");
+    printf(" | |_) / _` | '__| |/ /\\___ \\| | '_ ` _ \\ \n");
+    printf(" |  __/ (_| | |  |   <  ___) | | | | | | |\n");
+    printf(" |_|   \\__,_|_|  |_|\\_\\|____/|_|_| |_| |_|\n" RESET);
+    printf("\n");
+    printf("         " BG_BLUE " WELCOME TO PARKSIM 2025 " RESET "\n\n");
+    printf(" Select Game Mode:\n");
+    printf(" [1] " FG_GREEN "Smooth Mode" RESET " (Normal Traffic)\n");
+    printf(" [2] " FG_RED "Busy Mode" RESET "   (High Traffic - Coming Soon)\n");
+    printf("\n > Enter choice: ");
+}
 
 void printSimulation() {
     printf("\033[H\033[J");
-    printf("--- ESIEA PARKING SIMULATOR ---\n");
-    printMap(); // Ahora imprime en colores!
-    printf("--------------------------\n");
+    printf("--- PARKSIM: %s Mode ---\n", (gameMode == 1) ? "Smooth" : "Busy");
+    printMap();
+    printf("--------------------------------------------------------------\n");
 }
 
 void stepSimulation() {
@@ -48,7 +65,7 @@ void stepSimulation() {
 
 void addNewCar() {
     if (activeCars >= MAX_CARS) {
-        printf("Parking Full!\n");
+        printf(FG_RED "Parking Full!\n" RESET);
         return;
     }
 
@@ -71,13 +88,25 @@ void addNewCar() {
 }
 
 int main() {
+    // 1. MOSTRAR MENÚ
+    showMainMenu();
+    int choice;
+    if (scanf("%d", &choice) != 1) choice = 1;
+
+    if (choice == 2) {
+        gameMode = 2;
+        printf("Busy mode selected (Logic pending implementation). Starting Smooth...\n");
+        sleep(2);
+    } else {
+        gameMode = 1;
+    }
+
+    // 2. INICIAR SIMULACIÓN
     resetMap();
-    char choice = 'Y';
+    char action = 'Y';
     addNewCar();
 
-    printf("Welcome to the Interactive Parking Simulator.\n");
-
-    while (toupper(choice) == 'Y') {
+    while (toupper(action) == 'Y') {
         int movingCarCount;
         do {
             movingCarCount = 0;
@@ -90,11 +119,10 @@ int main() {
             if (movingCarCount > 0) usleep(80000);
         } while (movingCarCount > 0);
 
-        printf("\n--- ACTION ---\n");
-        printf("Spawn Car? (Y/N): ");
-        if (scanf(" %c", &choice) != 1) choice = 'N';
-        if (toupper(choice) == 'Y') addNewCar();
+        printf("\n " BG_WHITE FG_BLUE " ACTION " RESET " Spawn new car? (Y/N): ");
+        if (scanf(" %c", &action) != 1) action = 'N';
+        if (toupper(action) == 'Y') addNewCar();
     }
-    printf("\nFin.\n");
+    printf("\nSimulation finished.\n");
     return 0;
 }

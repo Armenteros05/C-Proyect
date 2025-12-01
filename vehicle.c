@@ -1,9 +1,7 @@
 #include "vehicle.h"
-#include "map.h"
-#include <math.h>
+#include <math.h> // Si usas abs()
 
-#define ENTRY_Y 1
-// Definimos las coordenadas X de las carreteras verticales
+// Ubicación de las carreteras verticales en el mapa
 #define ROAD_1_X 14
 #define ROAD_2_X 34
 
@@ -12,71 +10,45 @@ Vehicle createCar(int x, int y, char symbol) {
     return v;
 }
 
-void clearVehicle(Vehicle v) {
-    int isParked = 0;
-    if (v.parkedSpotIndex != -1) {
-        if (v.x == spots[v.parkedSpotIndex].x && v.y == spots[v.parkedSpotIndex].y) {
-            isParked = 1;
-        }
-    }
-    if (v.y >= 0 && v.y < MAP_ROWS && v.x > 0 && v.x < MAP_COLS - 1 && !isParked) {
-        parkingMap[v.y][v.x - 1] = asciiMap[v.y][v.x - 1];
-        parkingMap[v.y][v.x]     = asciiMap[v.y][v.x];
-        parkingMap[v.y][v.x + 1] = asciiMap[v.y][v.x + 1];
-    }
-}
-
-void drawVehicle(Vehicle v) {
-    if (v.y >= 0 && v.y < MAP_ROWS && v.x > 0 && v.x < MAP_COLS - 1) {
-        parkingMap[v.y][v.x - 1] = '[';
-        parkingMap[v.y][v.x]     = v.symbol;
-        parkingMap[v.y][v.x + 1] = ']';
-    }
-}
-
 int moveVehicle(Vehicle *v, int targetX, int targetY) {
-
+    // Si ya llegó, no se mueve
     if (v->x == targetX && v->y == targetY) {
-        drawVehicle(*v);
         return 0;
     }
 
-    clearVehicle(*v);
     int currentX = v->x;
     int currentY = v->y;
     int moved = 0;
 
-    // --- LÓGICA DE DOBLE CARRETERA ---
-
-    // 1. Elegir qué carretera tomar
-    // Si la meta está en X=4 (Col 1) o X=24 (Col 2), usar ROAD 1.
-    // Si la meta está en X=44 (Col 3), usar ROAD 2.
+    // 1. DECIDIR QUÉ CARRETERA TOMAR
+    // Si la plaza está en la columna 1 (X=4) o 2 (X=24), usa ROAD 1.
+    // Si está en la columna 3 (X=44), usa ROAD 2.
     int targetRoadX = (targetX <= 24) ? ROAD_1_X : ROAD_2_X;
 
-    // FASE 1: Ir a la carretera vertical adecuada desde la entrada
+    // FASE 1: Navegar horizontalmente hacia la carretera vertical correcta (desde la entrada)
     if (currentY <= 2 && currentX != targetRoadX) {
         if (currentX < targetRoadX) v->x++;
         else v->x--;
         moved = 1;
     }
-        // FASE 2: Bajar por la carretera hasta la fila Y correcta
+        // FASE 2: Bajar por la carretera vertical hasta la fila correcta
     else if (currentX == targetRoadX && currentY != targetY) {
         if (currentY < targetY) v->y++;
         else v->y--;
         moved = 1;
     }
-        // FASE 3: Salir de la carretera hacia la plaza
+        // FASE 3: Salir de la carretera y entrar en la plaza
     else if (currentY == targetY && currentX != targetX) {
         if (currentX < targetX) v->x++;
         else v->x--;
         moved = 1;
 
-        // Anti-overshoot
+        // "Frenada": Evitar que se pase de la coordenada si va muy rápido o por error
         if ((currentX < targetX && v->x > targetX) || (currentX > targetX && v->x < targetX)) {
             v->x = targetX;
         }
     }
-        // Fallback
+        // Fallback: Si se pierde, intenta ir directo
     else if (moved == 0) {
         if (currentX < targetX) v->x++;
         else if (currentX > targetX) v->x--;
@@ -85,6 +57,5 @@ int moveVehicle(Vehicle *v, int targetX, int targetY) {
         moved = 1;
     }
 
-    drawVehicle(*v);
     return moved;
 }
