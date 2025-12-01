@@ -2,8 +2,10 @@
 #include "map.h"
 #include <math.h>
 
-#define ENTRY_X 10
-#define ENTRY_Y 2 // El pasillo superior principal
+#define ENTRY_Y 1
+// Definimos las coordenadas X de las carreteras verticales
+#define ROAD_1_X 14
+#define ROAD_2_X 34
 
 Vehicle createCar(int x, int y, char symbol) {
     Vehicle v = { x, y, symbol, -1 };
@@ -17,8 +19,6 @@ void clearVehicle(Vehicle v) {
             isParked = 1;
         }
     }
-
-    // Limites de seguridad
     if (v.y >= 0 && v.y < MAP_ROWS && v.x > 0 && v.x < MAP_COLS - 1 && !isParked) {
         parkingMap[v.y][v.x - 1] = asciiMap[v.y][v.x - 1];
         parkingMap[v.y][v.x]     = asciiMap[v.y][v.x];
@@ -29,7 +29,7 @@ void clearVehicle(Vehicle v) {
 void drawVehicle(Vehicle v) {
     if (v.y >= 0 && v.y < MAP_ROWS && v.x > 0 && v.x < MAP_COLS - 1) {
         parkingMap[v.y][v.x - 1] = '[';
-        parkingMap[v.y][v.x]     = v.symbol; // '='
+        parkingMap[v.y][v.x]     = v.symbol;
         parkingMap[v.y][v.x + 1] = ']';
     }
 }
@@ -38,7 +38,7 @@ int moveVehicle(Vehicle *v, int targetX, int targetY) {
 
     if (v->x == targetX && v->y == targetY) {
         drawVehicle(*v);
-        return 0; // Llegó
+        return 0;
     }
 
     clearVehicle(*v);
@@ -46,28 +46,42 @@ int moveVehicle(Vehicle *v, int targetX, int targetY) {
     int currentY = v->y;
     int moved = 0;
 
-    // --- Lógica para Mapa de Islas ---
-    // El pasillo siempre está 2 filas por encima de la plaza en este diseño (o 3 para la fila 1)
-    int aisleY;
-    if (targetY == 5) aisleY = 2;      // Pasillo superior
-    else if (targetY == 9) aisleY = 7; // Pasillo intermedio 1
-    else aisleY = 11;                  // Pasillo intermedio 2 (para Y=13)
+    // --- LÓGICA DE DOBLE CARRETERA ---
 
-    // FASE 1: Ir verticalmente al pasillo correcto
-    if (currentY != aisleY && currentX != targetX) {
-        if (currentY < aisleY) v->y++;
-        else v->y--;
-        moved = 1;
-    }
-        // FASE 2: Moverse horizontalmente hasta el centro de la caja (X)
-    else if (currentX != targetX) {
-        if (currentX < targetX) v->x++;
+    // 1. Elegir qué carretera tomar
+    // Si la meta está en X=4 (Col 1) o X=24 (Col 2), usar ROAD 1.
+    // Si la meta está en X=44 (Col 3), usar ROAD 2.
+    int targetRoadX = (targetX <= 24) ? ROAD_1_X : ROAD_2_X;
+
+    // FASE 1: Ir a la carretera vertical adecuada desde la entrada
+    if (currentY <= 2 && currentX != targetRoadX) {
+        if (currentX < targetRoadX) v->x++;
         else v->x--;
         moved = 1;
     }
-        // FASE 3: Bajar a la caja desde el pasillo
-    else if (currentX == targetX && currentY != targetY) {
-        v->y++; // Siempre es bajar en este diseño
+        // FASE 2: Bajar por la carretera hasta la fila Y correcta
+    else if (currentX == targetRoadX && currentY != targetY) {
+        if (currentY < targetY) v->y++;
+        else v->y--;
+        moved = 1;
+    }
+        // FASE 3: Salir de la carretera hacia la plaza
+    else if (currentY == targetY && currentX != targetX) {
+        if (currentX < targetX) v->x++;
+        else v->x--;
+        moved = 1;
+
+        // Anti-overshoot
+        if ((currentX < targetX && v->x > targetX) || (currentX > targetX && v->x < targetX)) {
+            v->x = targetX;
+        }
+    }
+        // Fallback
+    else if (moved == 0) {
+        if (currentX < targetX) v->x++;
+        else if (currentX > targetX) v->x--;
+        else if (currentY < targetY) v->y++;
+        else v->y--;
         moved = 1;
     }
 
