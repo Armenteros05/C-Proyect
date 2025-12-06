@@ -1,9 +1,10 @@
 #include "vehicle.h"
-#include <math.h> // Si usas abs()
+#include <math.h>
 
-// Ubicación de las carreteras verticales en el mapa
-#define ROAD_1_X 14
-#define ROAD_2_X 34
+// Coordenadas EXACTAS de los carriles verticales (Centrados en los puntos)
+#define ROAD_1_X 6   // Carril izquierdo
+#define ROAD_2_X 24  // Carril central
+#define ROAD_3_X 40  // Carril derecho
 
 Vehicle createCar(int x, int y, char symbol) {
     Vehicle v = { x, y, symbol, -1 };
@@ -11,49 +12,42 @@ Vehicle createCar(int x, int y, char symbol) {
 }
 
 int moveVehicle(Vehicle *v, int targetX, int targetY) {
-    // Si ya llegó, no se mueve
-    if (v->x == targetX && v->y == targetY) {
-        return 0;
-    }
+    // Si ya llegó, stop
+    if (v->x == targetX && v->y == targetY) return 0;
 
-    int currentX = v->x;
-    int currentY = v->y;
+    int cx = v->x;
+    int cy = v->y;
     int moved = 0;
 
-    // 1. DECIDIR QUÉ CARRETERA TOMAR
-    // Si la plaza está en la columna 1 (X=4) o 2 (X=24), usa ROAD 1.
-    // Si está en la columna 3 (X=44), usa ROAD 2.
-    int targetRoadX = (targetX <= 24) ? ROAD_1_X : ROAD_2_X;
+    // 1. ELEGIR RUTA
+    // Si la plaza está en X=16, usa ROAD 1 (X=6)
+    // Si la plaza está en X=32, usa ROAD 2 (X=24)
+    // Si la plaza está en X=48, usa ROAD 3 (X=40)
+    int roadX = ROAD_1_X;
+    if (targetX >= 30) roadX = ROAD_2_X;
+    if (targetX >= 45) roadX = ROAD_3_X;
 
-    // FASE 1: Navegar horizontalmente hacia la carretera vertical correcta (desde la entrada)
-    if (currentY <= 2 && currentX != targetRoadX) {
-        if (currentX < targetRoadX) v->x++;
-        else v->x--;
-        moved = 1;
-    }
-        // FASE 2: Bajar por la carretera vertical hasta la fila correcta
-    else if (currentX == targetRoadX && currentY != targetY) {
-        if (currentY < targetY) v->y++;
-        else v->y--;
-        moved = 1;
-    }
-        // FASE 3: Salir de la carretera y entrar en la plaza
-    else if (currentY == targetY && currentX != targetX) {
-        if (currentX < targetX) v->x++;
-        else v->x--;
-        moved = 1;
+    // LÓGICA DE MOVIMIENTO "ESCUADRA" (Sin diagonales raras)
 
-        // "Frenada": Evitar que se pase de la coordenada si va muy rápido o por error
-        if ((currentX < targetX && v->x > targetX) || (currentX > targetX && v->x < targetX)) {
-            v->x = targetX;
-        }
+    // FASE A: Estamos arriba (zona entrada), ir lateralmente hasta pillar la columna
+    if (cy < 4 && cx != roadX) {
+        if (cx < roadX) v->x++; else v->x--;
+        moved = 1;
     }
-        // Fallback: Si se pierde, intenta ir directo
-    else if (moved == 0) {
-        if (currentX < targetX) v->x++;
-        else if (currentX > targetX) v->x--;
-        else if (currentY < targetY) v->y++;
-        else v->y--;
+        // FASE B: Bajar por la columna (carretera) hasta la altura de la plaza
+    else if (cx == roadX && cy != targetY) {
+        if (cy < targetY) v->y++; else v->y--;
+        moved = 1;
+    }
+        // FASE C: Entrar lateralmente a la plaza
+    else if (cy == targetY && cx != targetX) {
+        if (cx < targetX) v->x++; else v->x--;
+        moved = 1;
+    }
+        // FASE D (Emergencia): Si el coche se pierde, intenta ir directo
+    else if (!moved) {
+        if (cx < targetX) v->x++; else if (cx > targetX) v->x--;
+        else if (cy < targetY) v->y++; else v->y--;
         moved = 1;
     }
 
