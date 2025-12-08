@@ -1,55 +1,63 @@
 #include "vehicle.h"
 #include <math.h>
 
-// Coordenadas EXACTAS de los carriles verticales (Centrados en los puntos)
-#define ROAD_1_X 6   // Carril izquierdo
-#define ROAD_2_X 24  // Carril central
-#define ROAD_3_X 40  // Carril derecho
+#define ROAD_1_X 6
+#define ROAD_2_X 24
+#define ROAD_3_X 40
 
 Vehicle createCar(int x, int y, char symbol) {
-    Vehicle v = { x, y, symbol, -1 };
+    Vehicle v;
+    v.x = (float)x; // Convertimos a float
+    v.y = (float)y;
+    v.symbol = symbol;
+    v.parkedSpotIndex = -1;
     return v;
 }
 
-int moveVehicle(Vehicle *v, int targetX, int targetY) {
-    // Si ya llegó, stop
-    if (v->x == targetX && v->y == targetY) return 0;
+// Función auxiliar para acercarse suavemente
+float approach(float current, float target, float speed) {
+    if (fabs(current - target) < speed) return target; // Si está muy cerca, encaja
+    if (current < target) return current + speed;
+    if (current > target) return current - speed;
+    return current;
+}
 
-    int cx = v->x;
-    int cy = v->y;
-    int moved = 0;
+int moveVehicle(Vehicle *v, int targetX, int targetY, float speed) {
+    // Si ya llegó (con un margen de error pequeño), retornamos 0
+    if (fabs(v->x - targetX) < 0.1 && fabs(v->y - targetY) < 0.1) {
+        v->x = targetX; // Asegurar posición exacta al llegar
+        v->y = targetY;
+        return 0;
+    }
 
-    // 1. ELEGIR RUTA
-    // Si la plaza está en X=16, usa ROAD 1 (X=6)
-    // Si la plaza está en X=32, usa ROAD 2 (X=24)
-    // Si la plaza está en X=48, usa ROAD 3 (X=40)
+    float cx = v->x;
+    float cy = v->y;
+
+    // Determinar qué carretera usar
     int roadX = ROAD_1_X;
     if (targetX >= 30) roadX = ROAD_2_X;
     if (targetX >= 45) roadX = ROAD_3_X;
 
-    // LÓGICA DE MOVIMIENTO "ESCUADRA" (Sin diagonales raras)
+    // LÓGICA DE MOVIMIENTO SUAVE
+    // Prioridades:
+    // 1. Si estamos en la zona superior (Y < 4) y no en la columna correcta -> Mover X
+    // 2. Si estamos en la columna correcta pero no en la altura correcta -> Mover Y
+    // 3. Si estamos en la altura correcta -> Mover X hacia la plaza
 
-    // FASE A: Estamos arriba (zona entrada), ir lateralmente hasta pillar la columna
-    if (cy < 4 && cx != roadX) {
-        if (cx < roadX) v->x++; else v->x--;
-        moved = 1;
+    // FASE A: Navegación horizontal inicial (Zona superior)
+    if (cy < 4 && fabs(cx - roadX) > 0.1) {
+        v->x = approach(cx, roadX, speed);
     }
-        // FASE B: Bajar por la columna (carretera) hasta la altura de la plaza
-    else if (cx == roadX && cy != targetY) {
-        if (cy < targetY) v->y++; else v->y--;
-        moved = 1;
+        // FASE B: Navegación vertical (Bajar por la carretera)
+    else if (fabs(cx - roadX) <= 0.1 && fabs(cy - targetY) > 0.1) {
+        v->x = roadX; // Mantenerse pegado al carril
+        v->y = approach(cy, targetY, speed);
     }
-        // FASE C: Entrar lateralmente a la plaza
-    else if (cy == targetY && cx != targetX) {
-        if (cx < targetX) v->x++; else v->x--;
-        moved = 1;
-    }
-        // FASE D (Emergencia): Si el coche se pierde, intenta ir directo
-    else if (!moved) {
-        if (cx < targetX) v->x++; else if (cx > targetX) v->x--;
-        else if (cy < targetY) v->y++; else v->y--;
-        moved = 1;
+        // FASE C: Entrar a la plaza
+    else {
+        v->y = targetY; // Mantener altura
+        v->x = approach(cx, targetX, speed);
     }
 
-    return moved;
+    return 1; // Sigue moviéndose
 }
