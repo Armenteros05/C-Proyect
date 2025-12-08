@@ -3,17 +3,17 @@
 
 // LEYENDA:
 // # = Muro
-// . = Carretera/Asfalto (Gris)
-// E = Entrada
-// X = Salida
-// _ = Suelo de la plaza
+// . = Carretera (Gris)
+// E = Entrada (Verde)
+// X = Salida (Rojo)
+// _ = Plaza
 
 const char *asciiMap[MAP_ROWS] = {
         "#################################################################", // 0
         "#   ENTER   #...............................................# X #", // 1
         "#  EEEEEEE  #...............................................# X #", // 2
         "#. EEEEEEE .................................................# X #", // 3
-        "#........... _______ ....... _______ ....... _______ .......# X #", // 4  (Plazas abiertas)
+        "#........... _______ ....... _______ ....... _______ .......# X #", // 4
         "#........... _______ ....... _______ ....... _______ .......# X #", // 5
         "#........... _______ ....... _______ ....... _______ .......# X #", // 6
         "#...........................................................# X #", // 7
@@ -32,26 +32,24 @@ const char *asciiMap[MAP_ROWS] = {
         "#........... _______ ....... _______ ....... _______ .......#...#", // 20
         "#........... _______ ....... _______ ....... _______ .......#...#", // 21
         "#........... _______ ....... _______ ....... _______ .......#...#", // 22
-        "#################################################################"  // 23
+        "#######################################################.........#", // 23 <--- SALIDA ABIERTA
+        "                                                       XXXXXX    "  // 24 (Fuera de mapa visual)
 };
 
 char parkingMap[MAP_ROWS][MAP_COLS + 1];
 
-// Las coordenadas se mantienen, pero ahora el acceso está despejado
+// Las coordenadas de las plazas (spots) se quedan igual
 ParkingSpot spots[NUM_SPOTS] = {
-        // Columna 1 (X=16)
         { 16, 5, 0 }, { 16, 9, 0 }, { 16, 13, 0 }, { 16, 17, 0 }, { 16, 21, 0 },
-        // Columna 2 (X=32)
         { 32, 5, 0 }, { 32, 9, 0 }, { 32, 13, 0 }, { 32, 17, 0 }, { 32, 21, 0 },
-        // Columna 3 (X=48)
         { 48, 5, 0 }, { 48, 9, 0 }, { 48, 13, 0 }, { 48, 17, 0 }, { 48, 21, 0 },
-        // Rellenar hasta 18 spots
         { 16, 21, 0 }, { 32, 21, 0 }, { 48, 21, 0 }
 };
 
 void resetMap() {
     for (int i = 0; i < MAP_ROWS; i++) {
-        strncpy(parkingMap[i], asciiMap[i], MAP_COLS);
+        // Copiamos solo hasta la fila 23 para evitar desbordamientos
+        if (i < 24) strncpy(parkingMap[i], asciiMap[i], MAP_COLS);
         parkingMap[i][MAP_COLS] = '\0';
     }
     for (int i = 0; i < NUM_SPOTS; i++) {

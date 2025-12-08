@@ -4,14 +4,12 @@
 
 typedef struct {
     Vehicle car;
-    char state; // 'M'=Mover, 'P'=Aparcado, 'E'=Exit (Saliendo)
+    char state; // 'M'=Mover, 'P'=Aparcado, 'E'=Exit
 } SimVehicle;
 
 #define MAX_CARS NUM_SPOTS
 #define ENTRY_X 10
 #define ENTRY_Y 1
-#define EXIT_X 60  // Coordenada X de la salida (aprox)
-#define EXIT_Y 23  // Coordenada Y de la salida (abajo del todo)
 
 SimVehicle allCars[MAX_CARS];
 int activeCars = 0;
@@ -19,22 +17,14 @@ int activeCars = 0;
 typedef enum { MENU, GAME } State;
 State currentState = MENU;
 
-// Velocidad del coche (0.2 = lento y suave, 0.5 = rápido)
-float CAR_SPEED = 0.25f;
+float CAR_SPEED = 0.3f; // Un poco más rápido
 
-void removeCarLogic() {
-    // Buscar un coche aparcado ('P') y mandarlo a la salida
-    for (int i = 0; i < activeCars; i++) {
-        if (allCars[i].state == 'P') {
-            // Liberar la plaza
-            int spotIdx = allCars[i].car.parkedSpotIndex;
-            spots[spotIdx].isOccupied = 0; // ¡Luz verde!
-
-            // Cambiar estado a Saliendo
-            allCars[i].state = 'E';
-            return; // Solo sacamos uno cada vez que pulsas D
-        }
+// Elimina un coche del array desplazando los demás
+void deleteCarAtIndex(int index) {
+    for (int i = index; i < activeCars - 1; i++) {
+        allCars[i] = allCars[i+1];
     }
+    activeCars--;
 }
 
 void stepSimulation() {
@@ -46,43 +36,47 @@ void stepSimulation() {
             int spotIndex = simCar->car.parkedSpotIndex;
             int moved = moveVehicle(&simCar->car, spots[spotIndex].x, spots[spotIndex].y, CAR_SPEED);
             if (moved == 0) {
-                occupySpot(spotIndex); // Luz roja
+                occupySpot(spotIndex);
                 simCar->state = 'P';
             }
         }
-            // Lógica de SALIDA (Exit)
+            // Lógica de SALIDA
         else if (simCar->state == 'E') {
-            // Objetivo: Ir abajo a la derecha
-            // Usamos la misma lógica de movimiento pero hacia la salida
-            // Truco: movemos el coche hacia la carretera vertical más cercana y luego abajo
-            int targetX = 58; // Cerca de la salida X en el mapa
-            int targetY = 22; // Abajo del todo
+            // Destino: La salida abierta abajo a la derecha (aprox X=58, Y=23)
+            int targetX = 58;
+            int targetY = 24; // Fuera del mapa
 
             int moved = moveVehicle(&simCar->car, targetX, targetY, CAR_SPEED);
 
-            // Si llega a la salida, lo "teletransportamos" fuera (o borramos)
-            if (moved == 0) {
-                simCar->car.x = -10; // Lo sacamos de la pantalla
-                // Aquí podrías implementar lógica para eliminarlo del array
+            // Si el coche baja más de la fila 23, DESAPARECE
+            if (simCar->car.y >= 23.0f) {
+                deleteCarAtIndex(i);
+                i--; // Ajustamos el índice porque hemos borrado uno
             }
+        }
+    }
+}
+
+void removeCarLogic() {
+    // Busca el primer coche aparcado y sácalo
+    for (int i = 0; i < activeCars; i++) {
+        if (allCars[i].state == 'P') {
+            int spotIdx = allCars[i].car.parkedSpotIndex;
+            spots[spotIdx].isOccupied = 0; // Liberar plaza
+            allCars[i].state = 'E'; // Cambiar a modo Salida
+            return; // Solo uno por pulsación
         }
     }
 }
 
 void addNewCar() {
     if (activeCars >= MAX_CARS) return;
-
     int freeSpotIndex = findFreeSpot();
-    // Si no hay sitio, no entra
-    if (freeSpotIndex == -1) return;
+    if (freeSpotIndex == -1) return; // Lleno
 
     allCars[activeCars].car = createCar(ENTRY_X, ENTRY_Y, '=');
     allCars[activeCars].car.parkedSpotIndex = freeSpotIndex;
     allCars[activeCars].state = 'M';
-
-    // Opcional: Reservar visualmente la plaza ya (Luz roja)
-    // O esperar a que llegue (lo hacemos al llegar en stepSimulation)
-
     activeCars++;
 }
 
@@ -101,15 +95,13 @@ int main(int argc, char *argv[]) {
                 if (event.key.keysym.sym == SDLK_ESCAPE) running = 0;
 
                 if (currentState == MENU) {
-                    if (event.key.keysym.sym == SDLK_RETURN) {
+                    if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_RETURN) {
                         currentState = GAME;
                         addNewCar();
                     }
                 }
                 else {
-                    // ESPACIO: Nuevo Coche
                     if (event.key.keysym.sym == SDLK_SPACE) addNewCar();
-                    // D: Salir Coche (Depart)
                     if (event.key.keysym.sym == SDLK_d) removeCarLogic();
                 }
             }
@@ -120,15 +112,13 @@ int main(int argc, char *argv[]) {
         } else {
             stepSimulation();
             draw_background();
-
             for (int i = 0; i < activeCars; i++) {
-                // Usamos la nueva función suave
                 draw_car_smooth(allCars[i].car.x, allCars[i].car.y);
             }
         }
 
         SDL_RenderPresent(renderer);
-        SDL_Delay(16); // ~60 FPS para que se vea muy fluido
+        SDL_Delay(16);
     }
 
     close_graphics();
