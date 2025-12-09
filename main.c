@@ -1,10 +1,12 @@
 #include "graphics.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include "sound.h"
+int motorSoundPlaying = 0;
 
 typedef struct {
     Vehicle car;
-    char state;
+    char state; // 'M'=Mover, 'P'=Aparcado, 'E'=Exit
 } SimVehicle;
 
 #define MAX_CARS NUM_SPOTS
@@ -17,8 +19,9 @@ int activeCars = 0;
 typedef enum { MENU, GAME } State;
 State currentState = MENU;
 
-float CAR_SPEED = 0.3f;
+float CAR_SPEED = 0.3f; // Un poco más rápido
 
+// Elimina un coche del array desplazando los demás
 void deleteCarAtIndex(int index) {
     for (int i = index; i < activeCars - 1; i++) {
         allCars[i] = allCars[i+1];
@@ -27,37 +30,58 @@ void deleteCarAtIndex(int index) {
 }
 
 void stepSimulation() {
+    int anyCarMoving = 0;
+
     for (int i = 0; i < activeCars; i++) {
         SimVehicle *simCar = &allCars[i];
 
         if (simCar->state == 'M') {
             int spotIndex = simCar->car.parkedSpotIndex;
-            int moved = moveVehicle(&simCar->car, spots[spotIndex].x, spots[spotIndex].y, CAR_SPEED);
+            int moved = moveVehicle(&simCar->car,
+                                    spots[spotIndex].x,
+                                    spots[spotIndex].y,
+                                    CAR_SPEED);
+
+            if (moved != 0) anyCarMoving = 1;
+
             if (moved == 0) {
                 occupySpot(spotIndex);
                 simCar->state = 'P';
             }
         }
         else if (simCar->state == 'E') {
-            // Destino físico: La salida abajo a la derecha (X=58, Y=24)
             int moved = moveVehicle(&simCar->car, 58, 24, CAR_SPEED);
 
-            // Si ha llegado a la salida (moved == 0), desaparece
-            if (moved == 0) {
+            if (moved != 0) anyCarMoving = 1;
+
+            if (simCar->car.y >= 23.0f) {
                 deleteCarAtIndex(i);
-                i--; // Ajustamos índice
+                i--;
             }
         }
     }
+
+    // Motor sesi kontrolü
+    if (anyCarMoving && !motorSoundPlaying) {
+        playLooped("Sounds/motor.wav");
+        motorSoundPlaying = 1;
+    }
+
+    if (!anyCarMoving && motorSoundPlaying) {
+        stopAllSounds();
+        motorSoundPlaying = 0;
+    }
 }
 
+
 void removeCarLogic() {
+    // Busca el primer coche aparcado y sácalo
     for (int i = 0; i < activeCars; i++) {
         if (allCars[i].state == 'P') {
             int spotIdx = allCars[i].car.parkedSpotIndex;
-            spots[spotIdx].isOccupied = 0;
-            allCars[i].state = 'E'; // ¡A salir!
-            return;
+            spots[spotIdx].isOccupied = 0; // Liberar plaza
+            allCars[i].state = 'E'; // Cambiar a modo Salida
+            return; // Solo uno por pulsación
         }
     }
 }
@@ -65,7 +89,7 @@ void removeCarLogic() {
 void addNewCar() {
     if (activeCars >= MAX_CARS) return;
     int freeSpotIndex = findFreeSpot();
-    if (freeSpotIndex == -1) return;
+    if (freeSpotIndex == -1) return; // Lleno
 
     // RESERVIEREN: verhindert, dass ein weiteres Auto denselben Platz wählt,
     // bevor dieses Auto angekommen / als besetzt markiert ist.
@@ -75,11 +99,17 @@ void addNewCar() {
     allCars[activeCars].car.parkedSpotIndex = freeSpotIndex;
     allCars[activeCars].state = 'M';
     activeCars++;
+
+    if (!motorSoundPlaying) {
+        playLooped("Sounds/motor.wav");
+        motorSoundPlaying = 1;
+    }
 }
 
 int main(int argc, char *argv[]) {
     init_graphics();
     resetMap();
+    playSound("Sounds/menu.wav");
 
     int running = 1;
     SDL_Event event;
@@ -87,9 +117,13 @@ int main(int argc, char *argv[]) {
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) running = 0;
+
             if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE) running = 0;
+
                 if (currentState == MENU) {
                     if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_RETURN) {
+                        stopAllSounds();
                         currentState = GAME;
                         addNewCar();
                     }
@@ -97,7 +131,6 @@ int main(int argc, char *argv[]) {
                 else {
                     if (event.key.keysym.sym == SDLK_SPACE) addNewCar();
                     if (event.key.keysym.sym == SDLK_d) removeCarLogic();
-                    if (event.key.keysym.sym == SDLK_ESCAPE) running = 0;
                 }
             }
         }
@@ -115,6 +148,8 @@ int main(int argc, char *argv[]) {
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
     }
+
+    stopAllSounds();
     close_graphics();
     return 0;
 }
