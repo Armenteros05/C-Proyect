@@ -39,12 +39,11 @@ const char *asciiMap[MAP_ROWS] = {
 
 char parkingMap[MAP_ROWS][MAP_COLS + 1];
 
-// Coordenadas de las plazas (Sin cambios)
+// Coordenadas de las plazas (Sin cambios salvo quitar duplicados)
 ParkingSpot spots[NUM_SPOTS] = {
         { 16, 5, 0 }, { 16, 9, 0 }, { 16, 13, 0 }, { 16, 17, 0 }, { 16, 21, 0 },
         { 32, 5, 0 }, { 32, 9, 0 }, { 32, 13, 0 }, { 32, 17, 0 }, { 32, 21, 0 },
-        { 48, 5, 0 }, { 48, 9, 0 }, { 48, 13, 0 }, { 48, 17, 0 }, { 48, 21, 0 },
-        { 16, 21, 0 }, { 32, 21, 0 }, { 48, 21, 0 }
+        { 48, 5, 0 }, { 48, 9, 0 }, { 48, 13, 0 }, { 48, 17, 0 }, { 48, 21, 0 }
 };
 
 void resetMap() {
@@ -67,5 +66,23 @@ int findFreeSpot() {
 void occupySpot(int spotIndex) {
     if (spotIndex >= 0 && spotIndex < NUM_SPOTS) {
         spots[spotIndex].isOccupied = 1;
+    }
+}
+
+// Neue Funktion: Reserviert einen Platz (vor dem Parken)
+void reserveSpot(int spotIndex) {
+    if (spotIndex >= 0 && spotIndex < NUM_SPOTS) {
+        if (spots[spotIndex].isOccupied == 0) {
+            spots[spotIndex].isOccupied = 2; // 2 = reserviert
+        }
+    }
+}
+
+// Falls eine Reservation zurückgenommen werden muss
+void releaseSpotReservation(int spotIndex) {
+    if (spotIndex >= 0 && spotIndex < NUM_SPOTS) {
+        if (spots[spotIndex].isOccupied == 2) {
+            spots[spotIndex].isOccupied = 0;
+        }
     }
 }

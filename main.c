@@ -67,6 +67,10 @@ void addNewCar() {
     int freeSpotIndex = findFreeSpot();
     if (freeSpotIndex == -1) return;
 
+    // RESERVIEREN: verhindert, dass ein weiteres Auto denselben Platz wählt,
+    // bevor dieses Auto angekommen / als besetzt markiert ist.
+    reserveSpot(freeSpotIndex);
+
     allCars[activeCars].car = createCar(ENTRY_X, ENTRY_Y, '=');
     allCars[activeCars].car.parkedSpotIndex = freeSpotIndex;
     allCars[activeCars].state = 'M';

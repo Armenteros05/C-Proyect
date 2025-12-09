@@ -3,7 +3,7 @@
 
 #define MAP_ROWS 24
 #define MAP_COLS 65
-#define NUM_SPOTS 18
+#define NUM_SPOTS 15  // changed from 18 to 15
 
 typedef struct {
     int x;
@@ -19,5 +19,7 @@ extern ParkingSpot spots[NUM_SPOTS];
 void resetMap();
 int findFreeSpot();
 void occupySpot(int spotIndex);
+void reserveSpot(int spotIndex);
+void releaseSpotReservation(int spotIndex);
 
 #endif
