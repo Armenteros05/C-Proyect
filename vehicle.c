@@ -7,7 +7,7 @@
 
 Vehicle createCar(int x, int y, char symbol) {
     Vehicle v;
-    v.x = (float)x; // Convertimos a float
+    v.x = (float)x;
     v.y = (float)y;
     v.symbol = symbol;
     v.parkedSpotIndex = -1;
@@ -16,48 +16,69 @@ Vehicle createCar(int x, int y, char symbol) {
 
 // Función auxiliar para acercarse suavemente
 float approach(float current, float target, float speed) {
-    if (fabs(current - target) < speed) return target; // Si está muy cerca, encaja
+    if (fabs(current - target) < speed) return target;
     if (current < target) return current + speed;
     if (current > target) return current - speed;
     return current;
 }
 
 int moveVehicle(Vehicle *v, int targetX, int targetY, float speed) {
-    // Si ya llegó (con un margen de error pequeño), retornamos 0
+    // Si ya llegó
     if (fabs(v->x - targetX) < 0.1 && fabs(v->y - targetY) < 0.1) {
-        v->x = targetX; // Asegurar posición exacta al llegar
-        v->y = targetY;
+        v->x = (float)targetX;
+        v->y = (float)targetY;
         return 0;
     }
 
     float cx = v->x;
     float cy = v->y;
 
-    // Determinar qué carretera usar
+    // --- LÓGICA DE SALIDA (Si vamos hacia la salida abajo a la derecha) ---
+    if (targetY > 20 && targetX > 50) {
+        // 1. Salir de la plaza hacia el carril vertical más cercano
+        // Identificar carril más cercano
+        int nearestRoad = ROAD_1_X;
+        if (cx > 20) nearestRoad = ROAD_2_X;
+        if (cx > 36) nearestRoad = ROAD_3_X;
+
+        // FASE 1: Ir horizontalmente al carril vertical (Si no estamos ya abajo)
+        if (cy < 22 && fabs(cx - nearestRoad) > 0.5) {
+            v->x = approach(cx, nearestRoad, speed);
+        }
+            // FASE 2: Bajar por el carril hasta el fondo (Pasillo inferior Y=22)
+        else if (fabs(cx - nearestRoad) <= 0.5 && cy < 22) {
+            v->x = nearestRoad;
+            v->y = approach(cy, 22, speed); // Bajar hasta el pasillo inferior
+        }
+            // FASE 3: Ir a la derecha por el pasillo inferior hacia la salida
+        else if (cy >= 22 && cx < targetX) {
+            v->y = 22; // Mantenerse en el pasillo inferior
+            v->x = approach(cx, targetX, speed);
+        }
+            // FASE 4: Una vez en la X correcta, bajar por la salida
+        else if (fabs(cx - targetX) < 1.0) {
+            v->x = targetX;
+            v->y = approach(cy, targetY, speed);
+        }
+        return 1;
+    }
+
+    // --- LÓGICA DE ENTRADA (Estándar) ---
     int roadX = ROAD_1_X;
     if (targetX >= 30) roadX = ROAD_2_X;
     if (targetX >= 45) roadX = ROAD_3_X;
 
-    // LÓGICA DE MOVIMIENTO SUAVE
-    // Prioridades:
-    // 1. Si estamos en la zona superior (Y < 4) y no en la columna correcta -> Mover X
-    // 2. Si estamos en la columna correcta pero no en la altura correcta -> Mover Y
-    // 3. Si estamos en la altura correcta -> Mover X hacia la plaza
-
-    // FASE A: Navegación horizontal inicial (Zona superior)
     if (cy < 4 && fabs(cx - roadX) > 0.1) {
         v->x = approach(cx, roadX, speed);
     }
-        // FASE B: Navegación vertical (Bajar por la carretera)
     else if (fabs(cx - roadX) <= 0.1 && fabs(cy - targetY) > 0.1) {
-        v->x = roadX; // Mantenerse pegado al carril
+        v->x = roadX;
         v->y = approach(cy, targetY, speed);
     }
-        // FASE C: Entrar a la plaza
     else {
-        v->y = targetY; // Mantener altura
+        v->y = targetY;
         v->x = approach(cx, targetX, speed);
     }
 
-    return 1; // Sigue moviéndose
+    return 1;
 }
