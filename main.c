@@ -104,6 +104,7 @@ void addNewCar() {
         playLooped("Sounds/motor.wav");
         motorSoundPlaying = 1;
     }
+    playSound("Sounds/ping.wav");
 }
 
 int main(int argc, char *argv[]) {
