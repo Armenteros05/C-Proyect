@@ -4,6 +4,8 @@
 #include "sound.h"
 int motorSoundPlaying = 0;
 
+
+
 typedef struct {
     Vehicle car;
     char state; // 'M'=Mover, 'P'=Aparcado, 'E'=Exit
@@ -16,7 +18,8 @@ typedef struct {
 SimVehicle allCars[MAX_CARS];
 int activeCars = 0;
 
-typedef enum { MENU, GAME } State;
+typedef enum { MENU, GAME, GAME_BUSY } State;
+
 State currentState = MENU;
 
 float CAR_SPEED = 0.3f; // Un poco más rápido
@@ -100,10 +103,8 @@ void addNewCar() {
     allCars[activeCars].state = 'M';
     activeCars++;
 
-    if (!motorSoundPlaying) {
-        playLooped("Sounds/motor.wav");
-        motorSoundPlaying = 1;
-    }
+
+    playSound("Sounds/motor.wav");
     playSound("Sounds/ping.wav");
 }
 
@@ -115,6 +116,9 @@ int main(int argc, char *argv[]) {
     int running = 1;
     SDL_Event event;
 
+    Uint32 lastAutoAdd = 0;
+    Uint32 lastAutoRemove = 0;
+
     while (running) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) running = 0;
@@ -122,28 +126,73 @@ int main(int argc, char *argv[]) {
             if (event.type == SDL_KEYDOWN) {
                 if (event.key.keysym.sym == SDLK_ESCAPE) running = 0;
 
+                // MENU CONTROLS
                 if (currentState == MENU) {
-                    if (event.key.keysym.sym == SDLK_1 || event.key.keysym.sym == SDLK_RETURN) {
+                    if (event.key.keysym.sym == SDLK_1) {
                         stopAllSounds();
                         currentState = GAME;
                         addNewCar();
                     }
+                    if (event.key.keysym.sym == SDLK_2) {
+                        stopAllSounds();
+                        currentState = GAME_BUSY;
+
+                        lastAutoAdd = SDL_GetTicks();
+                        lastAutoRemove = SDL_GetTicks();
+                    }
                 }
-                else {
+
+                // GAME MODE KEYBINDS (manuel)
+                else if (currentState == GAME) {
                     if (event.key.keysym.sym == SDLK_SPACE) addNewCar();
                     if (event.key.keysym.sym == SDLK_d) removeCarLogic();
                 }
             }
         }
 
+        // ============================
+        // MODE: MENU
+        // ============================
         if (currentState == MENU) {
             draw_menu_screen();
-        } else {
+        }
+
+        // ============================
+        // MODE: EASY / NORMAL
+        // ============================
+        else if (currentState == GAME) {
             stepSimulation();
             draw_background();
-            for (int i = 0; i < activeCars; i++) {
+            for (int i = 0; i < activeCars; i++)
                 draw_car_smooth(allCars[i].car.x, allCars[i].car.y);
+        }
+
+        // ============================
+        // MODE: BUSY (OTOMATIK)
+        // ============================
+        else if (currentState == GAME_BUSY) {
+
+            Uint32 now = SDL_GetTicks();
+
+            // Her 700 ms'de otomatik araba ekle (hızlı trafik)
+            if (now - lastAutoAdd > 700) {
+                addNewCar();
+                lastAutoAdd = now;
             }
+
+            // Her 1500 ms'de araba çıkar
+            if (now - lastAutoRemove > 1500) {
+                removeCarLogic();
+                lastAutoRemove = now;
+            }
+
+            // Normal sim çalıştır
+            stepSimulation();
+
+            // Çiz
+            draw_background();
+            for (int i = 0; i < activeCars; i++)
+                draw_car_smooth(allCars[i].car.x, allCars[i].car.y);
         }
 
         SDL_RenderPresent(renderer);

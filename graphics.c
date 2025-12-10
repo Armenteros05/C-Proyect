@@ -57,6 +57,13 @@ void draw_char(char c, int x, int y, int size) {
     else if (c=='C') { s[0]=14; s[1]=16; s[2]=16; s[3]=16; s[4]=14; }
     else if (c=='I') { s[0]=14; s[1]=4; s[2]=4; s[3]=4; s[4]=14; }
     else if (c=='X') { s[0]=17; s[1]=10; s[2]=4; s[3]=10; s[4]=17; }
+    else if (c=='B') { s[0]=30; s[1]=17; s[2]=30; s[3]=17; s[4]=30; }
+    else if (c=='U') { s[0]=17; s[1]=17; s[2]=17; s[3]=17; s[4]=14; }
+    else if (c=='Y') { s[0]=17; s[1]=10; s[2]=4; s[3]=4; s[4]=4; }
+    else if (c=='M') { s[0]=17; s[1]=27; s[2]=21; s[3]=17; s[4]=17; }
+    else if (c=='2') { s[0]=14; s[1]=1; s[2]=14; s[3]=16; s[4]=30; }
+
+
     else if (c==' ') { }
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -82,7 +89,9 @@ void draw_string(const char* str, int x, int y, int size) {
 void draw_menu_screen() {
     SDL_SetRenderDrawColor(renderer, 20, 20, 30, 255);
     SDL_RenderClear(renderer);
-    draw_string("PRESS 1 TO START", (SCREEN_WIDTH/2)-140, SCREEN_HEIGHT/2, 3);
+    draw_string("PRESS 1 TO START IN EASY MODE", (SCREEN_WIDTH/2)-140, SCREEN_HEIGHT/2, 3);
+    draw_string("PRESS 2 TO START IN BUSY MODE", (SCREEN_WIDTH/2)-140, (SCREEN_HEIGHT/2)+30, 3);
+
 }
 
 void draw_background() {
@@ -92,6 +101,7 @@ void draw_background() {
     draw_box_pixels(0, 0, SCREEN_WIDTH, 50, 25, 25, 25, 255);
     draw_string("SPACE NEW", 20, 15, 2);
     draw_string("D EXIT", 300, 15, 2);
+
 
     int offY = 50;
 
