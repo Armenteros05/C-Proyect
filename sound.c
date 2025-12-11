@@ -2,45 +2,28 @@
 #include <stdio.h>
 #include "sound.h"
 
-// Eğer SoX çalışıyorsa:
-#define USE_SOX 1
+#define SOX_PATH "bin\\sox.exe"
 
 void playSound(const char *filepath) {
     char command[512];
 
-#if USE_SOX
-    sprintf(command, "start /B sox \"%s\" -t waveaudio", filepath);
-#else
-    sprintf(command, "start /B ffplay -nodisp -autoexit \"%s\"", filepath);
-#endif
+    sprintf(command,
+        "start \"\" /B /MIN \"%s\" \"%s\" -t waveaudio",
+        SOX_PATH, filepath);
 
-    printf("PLAY CMD: %s\n", command);
     system(command);
 }
 
-// -------------------------------------
-//   MOTOR SESİ İÇİN LOOP FONKSİYONU
-// -------------------------------------
 void playLooped(const char *filepath) {
     char command[512];
 
-    printf("MOTOR SESI ÇALIŞTIRILIYOR: %s\n", filepath); // DEBUG BURADA
-
-#if USE_SOX
-    // Sonsuz döngü yerine büyük bir sayı kullanıyoruz
-    sprintf(command, "start /B sox \"%s\" -t waveaudio repeat 999999", filepath);
-#else
-    sprintf(command, "start /B ffplay -nodisp -autoexit -loop 0 \"%s\"", filepath);
-#endif
+    sprintf(command,
+        "start \"\" /B /MIN \"%s\" \"%s\" -t waveaudio repeat 999999",
+        SOX_PATH, filepath);
 
     system(command);
 }
 
-
 void stopAllSounds() {
-#if USE_SOX
     system("taskkill /IM sox.exe /F >nul 2>&1");
-#else
-    system("taskkill /IM ffplay.exe /F >nul 2>&1");
-#endif
 }
