@@ -31,6 +31,11 @@ void deleteCarAtIndex(int index) {
     }
     activeCars--;
 }
+void resetGame() {
+    activeCars = 0;            // Tüm arabaları sıfırla
+    resetMap();                // Park yerlerini sıfırla
+    stopAllSounds();           // Bütün sesleri durdur
+}
 
 void stepSimulation() {
     int anyCarMoving = 0;
@@ -141,12 +146,26 @@ int main(int argc, char *argv[]) {
                         lastAutoRemove = SDL_GetTicks();
                     }
                 }
-
                 // GAME MODE KEYBINDS (manuel)
                 else if (currentState == GAME) {
                     if (event.key.keysym.sym == SDLK_SPACE) addNewCar();
                     if (event.key.keysym.sym == SDLK_d) removeCarLogic();
+                    if (event.key.keysym.sym == SDLK_m) {
+                        stopAllSounds();
+                        resetGame();
+                        currentState = MENU;
+                        playSound("Sounds/menu.wav");
+                    }
                 }
+                else if (currentState == GAME_BUSY) {
+                    if (event.key.keysym.sym == SDLK_m) {
+                        stopAllSounds();
+                        resetGame();
+                        currentState = MENU;
+                        playSound("Sounds/menu.wav");
+                    }
+                }
+
             }
         }
 

@@ -62,6 +62,9 @@ void draw_char(char c, int x, int y, int size) {
     else if (c=='Y') { s[0]=17; s[1]=10; s[2]=4; s[3]=4; s[4]=4; }
     else if (c=='M') { s[0]=17; s[1]=27; s[2]=21; s[3]=17; s[4]=17; }
     else if (c=='2') { s[0]=14; s[1]=1; s[2]=14; s[3]=16; s[4]=30; }
+    else if (c=='F') { s[0]=31; s[1]=16; s[2]=30; s[3]=16; s[4]=16; }
+    else if (c=='V') { s[0]=17; s[1]=17; s[2]=17; s[3]=10; s[4]=4; }
+
 
 
     else if (c==' ') { }
@@ -100,7 +103,10 @@ void draw_background() {
     SDL_RenderClear(renderer);
     draw_box_pixels(0, 0, SCREEN_WIDTH, 50, 25, 25, 25, 255);
     draw_string("SPACE NEW", 20, 15, 2);
-    draw_string("D EXIT", 300, 15, 2);
+    draw_string("D REMOVE CAR", 250, 15, 2);
+    draw_string("M FOR MENU", 500, 15, 2);
+
+
 
 
     int offY = 50;
