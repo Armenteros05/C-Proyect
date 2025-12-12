@@ -13,5 +13,7 @@ typedef struct {
 Vehicle createCar(int x, int y, char symbol);
 // Añadimos parámetro de velocidad
 int moveVehicle(Vehicle *v, int targetX, int targetY, float speed);
+void drawVehicle(Vehicle v);
+
 
 #endif

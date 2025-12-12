@@ -4,6 +4,8 @@
 #include <ctype.h>
 #include "map.h"
 #include "vehicle.h"
+#include "colors.h"
+
 
 typedef struct {
     Vehicle car;
@@ -52,7 +54,8 @@ void stepSimulation() {
             int targetX = spots[spotIndex].x;
             int targetY = spots[spotIndex].y;
 
-            int moved = moveVehicle(&simCar->car, targetX, targetY);
+            int moved = moveVehicle(&simCar->car, targetX, targetY, 1.0f);
+
 
             if (moved == 0) {
                 occupySpot(spotIndex);
@@ -96,7 +99,7 @@ int main() {
     if (choice == 2) {
         gameMode = 2;
         printf("Busy mode selected (Logic pending implementation). Starting Smooth...\n");
-        sleep(2);
+                sleep(2);
     } else {
         gameMode = 1;
     }

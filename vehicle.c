@@ -1,5 +1,7 @@
 #include "vehicle.h"
 #include <math.h>
+#include "colors.h"
+
 
 #define ROAD_1_X 6
 #define ROAD_2_X 24

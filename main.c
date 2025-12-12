@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sound.h"
+#include "colors.h"
+
 int motorSoundPlaying = 0;
 
 

@@ -1,5 +1,7 @@
 #include <string.h>
 #include "map.h"
+#include "colors.h"
+
 
 // LEYENDA:
 // # = Muro
